@@ -81,7 +81,6 @@ public class FlickFetcher {
         return new String(getUrlBytes(urlSpec));
     }
 
-
     //method to build an URL request and fetch contents
     //CHALLENGE ADDED A PAGE STRING to the method to pass a reference to which page
     // of pictures to return from flicker
