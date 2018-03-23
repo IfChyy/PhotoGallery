@@ -15,10 +15,14 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.ImageView;
+import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -62,10 +66,12 @@ public class PhotoGalleryFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-
+        setHasOptionsMenu(true);
         //execute the asycn task
-        new FetchItemsTask().execute();
+        // new FetchItemsTask().execute();
 
+        //CHAPTER25
+        updateItems();
 
         //-------------Pass the handler which is attached to the main thread
         //so it updates the UI
@@ -147,7 +153,7 @@ public class PhotoGalleryFragment extends Fragment {
                         Toast.makeText(getActivity(), "POS" + pageCount, Toast.LENGTH_SHORT).show();
 
                         layoutManager.scrollToPosition(0);
-                        new FetchItemsTask().execute();
+                        updateItems();
                     }
                 }
             }
@@ -158,6 +164,63 @@ public class PhotoGalleryFragment extends Fragment {
 
         return view;
 
+    }
+
+    //CHAPTER25
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.fragment_photo_gallery, menu);
+        //represents searchbox
+        MenuItem searchItem = menu.findItem(R.id.menu_item_search);
+        //get the search view
+        final SearchView searchView = (SearchView) searchItem.getActionView();
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            //executed when query is submited
+            public boolean onQueryTextSubmit(String s) {
+                updateItems();
+                QueryPreferences.setStoredQuery(getActivity(), s);
+                return true;
+            }
+
+            //executed each time a the text in sarchView chagnes
+            @Override
+            public boolean onQueryTextChange(String s) {
+                return false;
+            }
+        });
+
+        //set on click listener for the search view
+        //to populate the search bar with the most recent
+        //query saved in shared prefs
+        searchView.setOnSearchClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String query = QueryPreferences.getStoredQuery(getActivity());
+                searchView.setQuery(query, false);
+            }
+        });
+    }
+
+    //CHAPTER 25
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_item_clear:
+                QueryPreferences.setStoredQuery(getActivity(), null);
+                updateItems();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    //CHAPTER25
+    private void updateItems() {
+        String query = QueryPreferences.getStoredQuery(getActivity());
+        new FetchItemsTask(query).execute();
     }
 
     //if the screen is rotated stop the handler from downloading images
@@ -200,15 +263,15 @@ public class PhotoGalleryFragment extends Fragment {
             photoView = itemView.findViewById(R.id.gallery_image_view);
         }
 
-       /* public void bindGalleryItem(Drawable drawable) {
-            photoView.setImageDrawable(drawable);
-        }*/
-       //-------------USING PICASSO
-       public void bindGalleryItem(GalleryItem galleryItem){
-           Picasso.get().load(galleryItem.getUrl())
-                   .placeholder(R.drawable.bill_up_close)
-                   .into(photoView);
-       }
+        /* public void bindGalleryItem(Drawable drawable) {
+             photoView.setImageDrawable(drawable);
+         }*/
+        //-------------USING PICASSO
+        public void bindGalleryItem(GalleryItem galleryItem) {
+            Picasso.get().load(galleryItem.getUrl())
+                    .placeholder(R.drawable.bill_up_close)
+                    .into(photoView);
+        }
     }
 
     //-----------------------PHOTO ADAPTER
@@ -259,13 +322,13 @@ public class PhotoGalleryFragment extends Fragment {
 
         }*/
 
-      //-------------USING PICASSO
-      @Override
-      public void onBindViewHolder(@NonNull PhotoHolder holder, int position) {
-          GalleryItem galleryItem = itemsList.get(position);
-              holder.bindGalleryItem(galleryItem);
+        //-------------USING PICASSO
+        @Override
+        public void onBindViewHolder(@NonNull PhotoHolder holder, int position) {
+            GalleryItem galleryItem = itemsList.get(position);
+            holder.bindGalleryItem(galleryItem);
 
-      }
+        }
 
         @Override
         public int getItemCount() {
@@ -288,7 +351,7 @@ public class PhotoGalleryFragment extends Fragment {
             //loop over gallery items and our bounds
             for (int i = startIndex; i < endIndex; i++) {
                 //dont preload current
-                if(i == position){
+                if (i == position) {
                     continue;
                 }
 
@@ -308,6 +371,13 @@ public class PhotoGalleryFragment extends Fragment {
     //used for displaying progress updates on UI THREAD
     //3rd parameter is the type of result returned by Async TASK
     public class FetchItemsTask extends AsyncTask<Void, Void, List<GalleryItem>> {
+        //CHAPTER 25
+        private String query;
+
+        //CHAPTER 25 CONSTRUCTOR
+        public FetchItemsTask(String query){
+            this.query = query;
+        }
 
         //does something in the backgorund
         @Override
@@ -316,10 +386,9 @@ public class PhotoGalleryFragment extends Fragment {
             //return new FlickFetcher().fetchItems(String.valueOf(pageCount));
 
             //Chapter 25
-            String query = "robot"; //for testing
-            if(query == null){
+            if (query == null) {
                 return new FlickFetcher().fetchRecentPhotos();
-            }else{
+            } else {
                 return new FlickFetcher().searchPhotos(query);
             }
         }
