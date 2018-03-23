@@ -32,6 +32,17 @@ public class FlickFetcher {
     private static final String TAG = "FlickrFetcher";
     private static final String API_KEY = "15a5fe4344040d02117a5f5f7852aac9";
 
+    //Chapter 25
+    private static final String FETCH_RECENTS_METHOD = "flickr.photos.getRecent";
+    private static final String SEARCH_METHOD = "flickr.photos.search";
+    private static final Uri ENDPOINT = Uri.parse("https://api.flickr.com/services/rest")
+            .buildUpon()
+            .appendQueryParameter("api_key", API_KEY)
+            .appendQueryParameter("format", "json")
+            .appendQueryParameter("nojsoncallback", "1")
+            .appendQueryParameter("extras", "url_s")
+            .build();
+
 
     //list holding each GalleryItem
     List<GalleryItem> galleryItems = new ArrayList<>();
@@ -80,7 +91,7 @@ public class FlickFetcher {
     public String getUrlString(String urlSpec) throws IOException {
         return new String(getUrlBytes(urlSpec));
     }
-
+    //-------CHAPTER 25 created new method to save this one
     //method to build an URL request and fetch contents
     //CHALLENGE ADDED A PAGE STRING to the method to pass a reference to which page
     // of pictures to return from flicker
@@ -96,6 +107,7 @@ public class FlickFetcher {
                     .appendQueryParameter("method", "flickr.photos.getRecent")
                     .appendQueryParameter("api_key", API_KEY)
                     .appendQueryParameter("page", page)
+                    .appendQueryParameter("per_page", "300")
                     .appendQueryParameter("format", "json")
                     .appendQueryParameter("nojsoncallback", "1")
                     .appendQueryParameter("extras", "url_s")
@@ -107,7 +119,7 @@ public class FlickFetcher {
             JSONObject jsonObject = new JSONObject(jsonString);
             //pass the object to the method which goes into the json
             //to populate our list of items (gallery pics) ;
-          //  parseItems(galleryItems, jsonObject);
+            //  parseItems(galleryItems, jsonObject);
             //CHALLENGE USE GSON TO go through the JSON and update our list of GAllery items
             parseItemsGson(galleryItems, jsonObject);
 
@@ -120,6 +132,56 @@ public class FlickFetcher {
 
         return galleryItems;
     }
+
+    //CHAPTER 25
+    //method to download the gallery items with giveen url
+    //basically the same method as fetchItems
+    public List<GalleryItem> downloadGalleryItems(String url) {
+        List<GalleryItem> items = new ArrayList<>();
+        try {
+            //get the responce in a string format
+            String jsonString = getUrlString(url);
+            //format the outptu json string into a big json object
+            JSONObject jsonObject = new JSONObject(jsonString);
+            //pass the object to the method which goes into the json
+            //to populate our list of items (gallery pics) ;
+            parseItems(items, jsonObject);
+
+
+        } catch (JSONException je) {
+            Log.d(TAG, "Failed to parse JSON", je);
+        } catch (IOException ioe) {
+            Log.d(TAG, "Failed to fetch items", ioe);
+        }
+        return items;
+    }
+
+    //CHAPTER 25
+    //method to dynamically fill the method parameter value for the request
+    private String buildUrl(String method, String query){
+        Uri.Builder uriBuilder = ENDPOINT.buildUpon()
+                .appendQueryParameter("method", method);
+        //if method is search append the searched value
+        if(method.equals(SEARCH_METHOD)){
+            uriBuilder.appendQueryParameter("text", query);
+        }
+
+        return uriBuilder.build().toString();
+    }
+
+    //CHAPTER 25
+    //fetch the recent photos
+    public List<GalleryItem> fetchRecentPhotos(){
+        String url = buildUrl(FETCH_RECENTS_METHOD, null);
+        return downloadGalleryItems(url);
+    }
+    //CHAPTER 25
+    //fetch the recent photos
+    public List<GalleryItem> searchPhotos(String query){
+        String url = buildUrl(SEARCH_METHOD, query);
+        return downloadGalleryItems(url);
+    }
+
 
     //method to parse each item from the jsonBody to Each GalleryItem
     private void parseItems(List<GalleryItem> items, JSONObject jsonBody) throws JSONException {
@@ -175,7 +237,7 @@ public class FlickFetcher {
         //so that we can iterate throught all gallery items and add tem in our list of gallery items
         int size = jsonBody.getJSONObject("photos").getJSONArray("photo").length();
 
-        for(int i =0 ; i < size; i++){
+        for (int i = 0; i < size; i++) {
             GalleryItem item = gson.fromJson(jsonBody.getJSONObject("photos")
                     .getJSONArray("photo").getJSONObject(i).toString(), GalleryItem.class);
 

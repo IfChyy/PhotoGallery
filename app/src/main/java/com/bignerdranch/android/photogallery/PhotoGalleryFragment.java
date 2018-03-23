@@ -1,6 +1,11 @@
 package com.bignerdranch.android.photogallery;
 
+import android.annotation.TargetApi;
 import android.app.Fragment;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.media.Image;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -13,8 +18,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.squareup.picasso.Picasso;
 
 import org.w3c.dom.Text;
 
@@ -35,7 +43,7 @@ public class PhotoGalleryFragment extends Fragment {
 
     private RecyclerView recyclerView;
     private List<GalleryItem> galleryItemArraList = new ArrayList<>();
-
+    private ThumbnailDownloader<PhotoHolder> thumbnailDownloader;
 
     //int giving the count of photos page displayed by the app
     int pageCount = 1;
@@ -57,6 +65,31 @@ public class PhotoGalleryFragment extends Fragment {
 
         //execute the asycn task
         new FetchItemsTask().execute();
+
+
+        //-------------Pass the handler which is attached to the main thread
+        //so it updates the UI
+        //----------set ThumbnailDownloaderListener to handle the downloaded image
+        Handler responceHandler = new Handler();
+        //init our thumbnail downlaoder
+        thumbnailDownloader = new ThumbnailDownloader<>(responceHandler);
+        //init the listner to know when the image has been downloaded
+        //and passed to responcehandler to update UI
+        thumbnailDownloader.setThumbnailDownloadListener(new ThumbnailDownloader.ThumbnailDownloadListener<PhotoHolder>() {
+            @Override
+            public void onThumbnalDownloaded(PhotoHolder holder, Bitmap bitmap) {
+                Drawable drawable = new BitmapDrawable(getResources(), bitmap);
+
+                //-------------USING PICASSO
+                //holder.bindGalleryItem(drawable);
+            }
+        });
+
+        //start the downloade hanlder thread
+        thumbnailDownloader.start();
+        //get the looper
+        thumbnailDownloader.getLooper();
+        Log.d(TAG, "Background thread started@!");
     }
 
     @Nullable
@@ -69,7 +102,7 @@ public class PhotoGalleryFragment extends Fragment {
         //init the recyclerview
         recyclerView = view.findViewById(R.id.gallery_recycler_view);
         //set recycler view with grid layout manager with 3 collumns
-      //  recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
+        //  recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
 
         //CHALLENGE set the number of collumns dinamycally
         gridLayoutManager = new GridLayoutManager(getActivity(), 1);
@@ -81,7 +114,7 @@ public class PhotoGalleryFragment extends Fragment {
         viewTreeObserver.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-               collumnsNumber = recyclerView.getWidth()/COLLUMN_WIDTH;
+                collumnsNumber = recyclerView.getWidth() / COLLUMN_WIDTH;
                 Handler handler = new Handler();
                 handler.postDelayed(new Runnable() {
                     @Override
@@ -94,11 +127,8 @@ public class PhotoGalleryFragment extends Fragment {
         });
 
 
-
         //set recycler view with grid layout manager with each collumn equl to 200Pixels
         recyclerView.setLayoutManager(gridLayoutManager);
-
-
 
 
         recyclerView.setOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -130,6 +160,21 @@ public class PhotoGalleryFragment extends Fragment {
 
     }
 
+    //if the screen is rotated stop the handler from downloading images
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        thumbnailDownloader.clearQueue();
+    }
+
+    //stop the downloading if acitivty destoryed
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        thumbnailDownloader.quit();
+        Log.d(TAG, "Background thread destoroyed!");
+    }
+
     //init the instance of photoGalleryFragment in other class
     public static PhotoGalleryFragment newInstance() {
         return new PhotoGalleryFragment();
@@ -148,17 +193,22 @@ public class PhotoGalleryFragment extends Fragment {
     //----------------------PHOTO HOLDER
     //VIEW HOLDER class to hold the infromation about each gallery item
     private class PhotoHolder extends RecyclerView.ViewHolder {
-        private TextView picTitle;
+        private ImageView photoView;
 
         public PhotoHolder(View itemView) {
             super(itemView);
-            picTitle = (TextView) itemView;
+            photoView = itemView.findViewById(R.id.gallery_image_view);
         }
 
-        public void bindGalleryItem(GalleryItem item) {
-
-            picTitle.setText(item.toString());
-        }
+       /* public void bindGalleryItem(Drawable drawable) {
+            photoView.setImageDrawable(drawable);
+        }*/
+       //-------------USING PICASSO
+       public void bindGalleryItem(GalleryItem galleryItem){
+           Picasso.get().load(galleryItem.getUrl())
+                   .placeholder(R.drawable.bill_up_close)
+                   .into(photoView);
+       }
     }
 
     //-----------------------PHOTO ADAPTER
@@ -177,21 +227,74 @@ public class PhotoGalleryFragment extends Fragment {
         @NonNull
         @Override
         public PhotoHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            TextView photoText = new TextView(getActivity());
-            return new PhotoHolder(photoText);
+            LayoutInflater inflater = LayoutInflater.from(getActivity());
+            View view = inflater.inflate(R.layout.gallery_item, parent, false);
+            return new PhotoHolder(view);
         }
 
         //create a new Gallery Item object
+        //get a drawlable res
         //bind it to the holder
-        @Override
+        //set the downloader to download images
+      /*  @Override
         public void onBindViewHolder(@NonNull PhotoHolder holder, int position) {
             GalleryItem galleryItem = itemsList.get(position);
-            holder.bindGalleryItem(galleryItem);
-        }
+            //get cached image
+
+
+            Bitmap bitmap = thumbnailDownloader.getCachedImage(galleryItem.getUrl());
+
+            if (bitmap == null) {
+                Drawable drawable = getResources().getDrawable(R.drawable.bill_up_close);
+                holder.bindGalleryItem(drawable);
+                thumbnailDownloader.queueThumbnail(holder, galleryItem.getUrl());
+            } else {
+                holder.bindGalleryItem(new BitmapDrawable(getResources(), bitmap));
+            }
+
+
+            //preload previous and adjecent images
+            preloadAdjecentImages(position);
+
+
+        }*/
+
+      //-------------USING PICASSO
+      @Override
+      public void onBindViewHolder(@NonNull PhotoHolder holder, int position) {
+          GalleryItem galleryItem = itemsList.get(position);
+              holder.bindGalleryItem(galleryItem);
+
+      }
 
         @Override
         public int getItemCount() {
             return itemsList.size();
+        }
+
+
+        //CHALLENGE Cached previous and next 10 images
+        private void preloadAdjecentImages(int position) {
+            //number of images to preload
+            final int imageBufferSize = 10;
+
+            //set the indexes for the images to preload
+            //start must be greater or equal to 0 >=0
+            int startIndex = Math.max(position - imageBufferSize, 0);
+            //last indext must be less or equal to the items list minus 1  <= 1
+            int endIndex = Math.min(position + imageBufferSize, itemsList.size() - 1);
+
+
+            //loop over gallery items and our bounds
+            for (int i = startIndex; i < endIndex; i++) {
+                //dont preload current
+                if(i == position){
+                    continue;
+                }
+
+                String url = itemsList.get(i).getUrl();
+                thumbnailDownloader.preloadImage(url);
+            }
         }
     }
 
@@ -210,8 +313,15 @@ public class PhotoGalleryFragment extends Fragment {
         @Override
         protected List<GalleryItem> doInBackground(Void... voids) {
             //fetch a string from url with json data
-            return new FlickFetcher().fetchItems(String.valueOf(pageCount));
+            //return new FlickFetcher().fetchItems(String.valueOf(pageCount));
 
+            //Chapter 25
+            String query = "robot"; //for testing
+            if(query == null){
+                return new FlickFetcher().fetchRecentPhotos();
+            }else{
+                return new FlickFetcher().searchPhotos(query);
+            }
         }
 
         //after images downlaoded setup the adapter
