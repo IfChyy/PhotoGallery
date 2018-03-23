@@ -1,6 +1,7 @@
 package com.bignerdranch.android.photogallery;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.Fragment;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -21,6 +22,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 import android.widget.SearchView;
 import android.widget.TextView;
@@ -180,8 +182,14 @@ public class PhotoGalleryFragment extends Fragment {
             @Override
             //executed when query is submited
             public boolean onQueryTextSubmit(String s) {
-                updateItems();
+
                 QueryPreferences.setStoredQuery(getActivity(), s);
+                updateItems();
+
+                InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Activity.INPUT_METHOD_SERVICE);
+                View view = getActivity().getCurrentFocus();
+                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+
                 return true;
             }
 
@@ -375,7 +383,7 @@ public class PhotoGalleryFragment extends Fragment {
         private String query;
 
         //CHAPTER 25 CONSTRUCTOR
-        public FetchItemsTask(String query){
+        public FetchItemsTask(String query) {
             this.query = query;
         }
 
