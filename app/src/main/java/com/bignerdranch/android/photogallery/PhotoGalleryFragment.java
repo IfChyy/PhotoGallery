@@ -3,6 +3,7 @@ package com.bignerdranch.android.photogallery;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.ProgressDialog;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -381,6 +382,8 @@ public class PhotoGalleryFragment extends Fragment {
     public class FetchItemsTask extends AsyncTask<Void, Void, List<GalleryItem>> {
         //CHAPTER 25
         private String query;
+        // progress dialog to show user that the images are loading
+        ProgressDialog dialog;
 
         //CHAPTER 25 CONSTRUCTOR
         public FetchItemsTask(String query) {
@@ -388,6 +391,13 @@ public class PhotoGalleryFragment extends Fragment {
         }
 
         //does something in the backgorund
+        //CHAPTER 25 CHALLENGE
+        protected void onPreExecute() {
+            dialog = new ProgressDialog(getActivity());
+            dialog.setMessage("loading");
+            dialog.show();
+        }
+
         @Override
         protected List<GalleryItem> doInBackground(Void... voids) {
             //fetch a string from url with json data
@@ -404,6 +414,9 @@ public class PhotoGalleryFragment extends Fragment {
         //after images downlaoded setup the adapter
         @Override
         protected void onPostExecute(List<GalleryItem> items) {
+            if(dialog != null){
+                dialog.dismiss();
+            }
             galleryItemArraList = items;
             setupAdapter();
 
