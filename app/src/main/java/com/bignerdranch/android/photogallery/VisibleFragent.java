@@ -24,6 +24,7 @@ public abstract class VisibleFragent extends Fragment{
     public void onStart() {
         super.onStart();
         //create a new intent filter with our (Action) show notification
+        //which filters if there is an Intent with that action
         IntentFilter filter = new IntentFilter(PollTestService.ACTION_SHOW_NOTIFICATION);
         //registerReceiver meaning that our app is in foreground
         getActivity().registerReceiver(onShowNotification, filter
