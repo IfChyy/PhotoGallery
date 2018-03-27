@@ -1,18 +1,22 @@
 package com.bignerdranch.android.photogallery;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.ProgressDialog;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.media.Image;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -26,14 +30,10 @@ import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 import android.widget.SearchView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
-import org.w3c.dom.Text;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,7 +44,7 @@ import java.util.List;
  * so it will be displayed in our frame layout
  */
 
-public class PhotoGalleryFragment extends Fragment {
+public class PhotoGalleryFragment extends VisibleFragent {
     private static final String TAG = "PhotoGalleryFragment";
 
 
@@ -62,6 +62,8 @@ public class PhotoGalleryFragment extends Fragment {
 
     GridLayoutManager gridLayoutManager;
 
+
+    boolean hasBeenScheduled = false;
     //used to retain the fragment for a short period of time
     //while rotating the phone for not calling new async tasks
     //every time phone rotates
@@ -75,6 +77,7 @@ public class PhotoGalleryFragment extends Fragment {
 
         //CHAPTER25
         updateItems();
+
 
         //-------------Pass the handler which is attached to the main thread
         //so it updates the UI
@@ -211,6 +214,24 @@ public class PhotoGalleryFragment extends Fragment {
                 searchView.setQuery(query, false);
             }
         });
+
+
+
+        //CHAPTER 26 USING JOBSERVICE
+        MenuItem toggleItem = menu.findItem(R.id.menu_item_toggle_polling);
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
+            if (PollService.isServiceAlarmOn(getActivity())) {
+                toggleItem.setTitle(R.string.stop_polling);
+            } else {
+                toggleItem.setTitle(R.string.start_polling);
+            }
+        } else {
+            if (PollTestService.isServiceScheduleOn(getActivity())) {
+                toggleItem.setTitle(R.string.stop_polling);
+            } else {
+                toggleItem.setTitle(R.string.start_polling);
+            }
+        }
     }
 
     //CHAPTER 25
@@ -220,6 +241,20 @@ public class PhotoGalleryFragment extends Fragment {
             case R.id.menu_item_clear:
                 QueryPreferences.setStoredQuery(getActivity(), null);
                 updateItems();
+                return true;
+
+            case R.id.menu_item_toggle_polling:
+        /*        //check if alarm is on or off
+                boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
+                //if on stop if off start
+                PollService.setServiceAlarm(getActivity(), shouldStartAlarm);
+*/
+
+               //CHAPTER 26 CHALLENGE JOBSERVICE
+                boolean shouldStartAlarm = !PollTestService.isServiceScheduleOn(getActivity());
+                PollTestService.setServiceSchedule(getActivity(), shouldStartAlarm);
+
+                getActivity().invalidateOptionsMenu();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -414,7 +449,7 @@ public class PhotoGalleryFragment extends Fragment {
         //after images downlaoded setup the adapter
         @Override
         protected void onPostExecute(List<GalleryItem> items) {
-            if(dialog != null){
+            if (dialog != null) {
                 dialog.dismiss();
             }
             galleryItemArraList = items;

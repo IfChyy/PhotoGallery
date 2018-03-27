@@ -1,8 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.bignerdranch.android.photogallery">
+    <!--CREATE APP"S OWN permission to exclude our broadcast receiver to listen to this app only.
+        protection level signature means that no one can access our permission
+        because of the signed key we are using for our app.
+        if anyone wants to access our permission their app must be signed with the same key-->
+    <permission
+        android:name="com.bignerdranch.android.photogallery.PRIVATE"
+        android:protectionLevel="signature" />
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="com.bignerdranch.android.photogallery.PRIVATE" />
 
     <application
         android:allowBackup="true"
@@ -18,6 +29,34 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!--SERVICES TO SHOW NOTIFICATION AND RUN A SERVICE ON THE BACKGROUND-->
+        <service android:name=".PollService" />
+        <!--THIS SERVICE CAN SUSTAIN APP EXITED OR REBOOT
+        -->
+        <service
+            android:name=".PollTestService"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <!-- STANDALONE RECEIVER TO KNOW WHEN THE PHONE HAS FINISHED BOOTING  -->
+        <receiver android:name=".StartupReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <!--REGIESTERING A NEW RECEIVER AND ASSIGNING ITS PRIORITY TO THE LOWEST POSSIBLE
+        eg -999, this means that it will wait for our dynamically registered receiver
+        to see if it should post our notificatio nor not -->
+        <receiver
+            android:name=".NotificationReceiver"
+            android:exported="false">
+            <intent-filter
+                android:priority="-999">
+
+                <action android:name="com.bignerdranch.android.photogallery.SHOW_NOTIFICATION" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

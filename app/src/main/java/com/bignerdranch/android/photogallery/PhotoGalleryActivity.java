@@ -1,6 +1,8 @@
 package com.bignerdranch.android.photogallery;
 
 import android.app.Fragment;
+import android.content.Context;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
@@ -17,4 +19,9 @@ public class PhotoGalleryActivity extends SingleFragmentActivity {
         return PhotoGalleryFragment.newInstance();
     }
 
+    //method used to start PhotoGalleryActivity called from somewhere else
+
+    public static Intent newIntent(Context context){
+        return  new Intent(context, PhotoGalleryActivity.class);
+    }
 }
