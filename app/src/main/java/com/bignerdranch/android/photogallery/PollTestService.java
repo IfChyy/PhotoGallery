@@ -16,7 +16,6 @@ import android.net.ConnectivityManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
 import java.util.List;
@@ -31,7 +30,7 @@ public class PollTestService extends JobService {
     private static final int JOB_ID = 5;
     private static final long TIME_INTERVAL = 1000 * 5;
     public static final String ACTION_SHOW_NOTIFICATION = "com.bignerdranch.android.photogallery.SHOW_NOTIFICATION";
-    public static final String PERMITION_RPIVATE = "com.bignerdranch.android.photogallery.PRIVATE";
+    public static final String PERMISSION_RPIVATE = "com.bignerdranch.android.photogallery.PRIVATE";
     public static final String REQUEST_CODE = "REQUEST_CODE";
     public static final String NOTIFICATION = "NOTIFICATION";
 
@@ -180,9 +179,9 @@ public class PollTestService extends JobService {
                 //it is send everytime a new search is available
                 //set its permision to be private for the app only
                 //any app must use the same permission to receive our broadcast intent
-                sendBroadcast(new Intent(ACTION_SHOW_NOTIFICATION), PERMITION_RPIVATE);*/
+                sendBroadcast(new Intent(ACTION_SHOW_NOTIFICATION), PERMISSION_RPIVATE);*/
 
-
+                //sends a broadcast intent every time a new search results is available
                 showBackgroundNotification(0, notification);
             }
         }
@@ -205,15 +204,25 @@ public class PollTestService extends JobService {
             in.putExtra(REQUEST_CODE, request_Code);
             //and extra notification (String value)
             in.putExtra(NOTIFICATION, notification);
-            ////usually resultrReceiver is used to receive the broadcast and post the notificaiton
+            ////usually resultReceiver is used to receive the broadcast and post the notification
             //here this is not possible because pollTestService could be long dead, meaning the receiver also will be dead
-            //so our receiver will be a standalone receiver, and we are going to enfroce it to run
-            //afet rhe dynamicaly registered receiver
-            //HERE WE SEND OUR INTENT(ACTION FOR NOTIFICIATON) as orderedBroadcast, meaning it has an order
-            //and it is broadcastet with PERMISSION_PRIVATE - within our app only
-            //and we are seding out the result code _ ACTIVITY_RESULT_OK
-            //meaning we are sending an broadcast intent
-            sendOrderedBroadcast(in, PERMITION_RPIVATE, null, null, Activity.RESULT_OK, null, null);
+            //so our receiver will be a standalone receiver, and we are going to enforce it to run
+            //after rhe dynamically registered receiver
+            //HERE WE SEND OUR INTENT(ACTION FOR NOTIFICATION) as orderedBroadcast, meaning it has an order
+            //and it is broadcast with PERMISSION_PRIVATE - within our app only
+            //and we are sending out the result code _ ACTIVITY_RESULT_OK
+            //meaning we are sending a broadcast intent
+
+
+            /*sends our broadcast concurrently to all receivers in PERMISSION_PRIVATE
+            * first one is Visible Fragment, because it is hosting our fragment which
+            * starts this class
+            * if VisibleFragment class receives this broadcast intnet
+            * ti sets the result code to CANCEL
+            * meaning that the application is opened
+            * then the intent goes to NotificationReceiver and checks the result code
+            * to know if it is going to show a notification*/
+            sendOrderedBroadcast(in, PERMISSION_RPIVATE, null, null, Activity.RESULT_OK, null, null);
         }
 
     }

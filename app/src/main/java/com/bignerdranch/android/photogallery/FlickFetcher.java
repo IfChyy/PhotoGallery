@@ -134,8 +134,8 @@ public class FlickFetcher {
     }
 
     //CHAPTER 25
-    //method to download the gallery items with giveen url
-    //basically the same method as fetchItems
+    //method to download the gallery items with given url
+    //basically the same method as fetchItems but with Gson Library
     public List<GalleryItem> downloadGalleryItems(String url) {
         List<GalleryItem> items = new ArrayList<>();
         try {
@@ -173,13 +173,13 @@ public class FlickFetcher {
     //fetch the recent photos
     public List<GalleryItem> fetchRecentPhotos(){
         String url = buildUrl(FETCH_RECENTS_METHOD, null);
-        return downloadGalleryItems(url);
+        return fetchItems(url);
     }
     //CHAPTER 25
     //fetch the recent photos
     public List<GalleryItem> searchPhotos(String query){
         String url = buildUrl(SEARCH_METHOD, query);
-        return downloadGalleryItems(url);
+        return fetchItems(url);
     }
 
 
@@ -203,7 +203,8 @@ public class FlickFetcher {
             GalleryItem item = new GalleryItem();
             item.setId(photoJsonObject.getString("id"));
             item.setCaption(photoJsonObject.getString("title"));
-            Log.d(TAG, "Received JSON " + item.toString());
+            item.setOwner(photoJsonObject.getString("owner"));
+            Log.d(TAG, "Received JSON " + item.getOwner());
             //check if jsobObject (photo) has url
             if (!photoJsonObject.has("url_s")) {
                 continue;
@@ -218,7 +219,7 @@ public class FlickFetcher {
 
 
     //CHALLENGE USE GSON LIBRARY TO SIMPLIFY THE REQUEST
-    //method to parse each item from the jsonBody to Each GalleryItem
+    //method to parse each item from the jsonBody to Each GalleryItem USING GSON LIBRARY
     private void parseItemsGson(List<GalleryItem> items, JSONObject jsonBody) throws JSONException {
         //init gson
         Gson gson = new Gson();

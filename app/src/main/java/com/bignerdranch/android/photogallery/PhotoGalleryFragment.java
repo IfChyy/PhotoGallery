@@ -7,6 +7,7 @@ import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -28,6 +29,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
+import android.webkit.URLUtil;
 import android.widget.ImageView;
 import android.widget.SearchView;
 import android.widget.Toast;
@@ -299,12 +301,15 @@ public class PhotoGalleryFragment extends VisibleFragent {
 
     //----------------------PHOTO HOLDER
     //VIEW HOLDER class to hold the infromation about each gallery item
-    private class PhotoHolder extends RecyclerView.ViewHolder {
+    private class PhotoHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
         private ImageView photoView;
+        //init the gallery item
+        private GalleryItem item;
 
         public PhotoHolder(View itemView) {
             super(itemView);
             photoView = itemView.findViewById(R.id.gallery_image_view);
+            itemView.setOnClickListener(this);
         }
 
         /* public void bindGalleryItem(Drawable drawable) {
@@ -315,6 +320,14 @@ public class PhotoGalleryFragment extends VisibleFragent {
             Picasso.get().load(galleryItem.getUrl())
                     .placeholder(R.drawable.bill_up_close)
                     .into(photoView);
+            item = galleryItem;
+        }
+
+        @Override
+        public void onClick(View v) {
+            Intent webIn = PhotoPageActivity.newIntent(getActivity(), item.getPhotoPageUri());
+            startActivity(webIn);
+
         }
     }
 

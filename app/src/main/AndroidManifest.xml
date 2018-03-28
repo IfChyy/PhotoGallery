@@ -29,6 +29,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!--Web view and other views have to much data to save in onSavedInstance
+        and retaining wont work
+        the ideal way is to tell the actiity to handle its own configuration changes-->
+        <activity android:name=".PhotoPageActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"/>
 
         <!--SERVICES TO SHOW NOTIFICATION AND RUN A SERVICE ON THE BACKGROUND-->
         <service android:name=".PollService" />

@@ -6,11 +6,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.widget.Toast;
 
 /**
  * Created by Ivo Georgiev(IfChyy)
- * VisibleFragmnet class is a class holding a dynamic broadcast receiver
+ * VisibleFragmnet class is a class holding a dynamic broadcast receiver(registered in code, not manifest)
+ * //this receiver is only working when the app is live and running
  * its job is to listen whether our app has started polling or not
  */
 
@@ -28,7 +28,7 @@ public abstract class VisibleFragent extends Fragment{
         IntentFilter filter = new IntentFilter(PollTestService.ACTION_SHOW_NOTIFICATION);
         //registerReceiver meaning that our app is in foreground
         getActivity().registerReceiver(onShowNotification, filter
-        , PollTestService.PERMITION_RPIVATE, null);
+        , PollTestService.PERMISSION_RPIVATE, null);
     }
 
     //if polling is stoped then unregister our receiver
