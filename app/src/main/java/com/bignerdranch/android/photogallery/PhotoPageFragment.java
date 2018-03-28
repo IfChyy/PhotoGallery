@@ -110,7 +110,6 @@ public class PhotoPageFragment extends VisibleFragent {
             }
         });
 
-
         //web view constructed then load the url onto it
         webView.loadUrl(this.uri.toString());
         return view;
