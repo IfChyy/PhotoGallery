@@ -10,3 +10,5 @@ Using Job Service(or Alarm in older version of android) the app is responsipble 
 and presenting them to the user with a notification which if clicked opens the app itself.
 Here I Learned also how to use Broadcast Receivers to listen if the device after turned of has been turned on, which
 fires my service to tell the app to start polling again for new images and display notifications to the user.
+The last function in this app is when an image is pressed, the app redirects the user to a webview which displays
+the image in flickr's website.
