@@ -1,11 +1,10 @@
-package com.bignerdranch.android.photogallery;
+package com.bignerdranch.android.photogallery.utilities;
 
 import android.net.Uri;
 import android.util.Log;
 
+import com.bignerdranch.android.photogallery.dataclass.GalleryItem;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -14,9 +13,7 @@ import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
-import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +27,7 @@ import java.util.List;
 public class FlickFetcher {
 
     private static final String TAG = "FlickrFetcher";
-    private static final String API_KEY = "15a5fe4344040d02117a5f5f7852aac9";
+    private static final String API_KEY = "9e314633e0f176cb654d9d6f96b99e00";
 
     //Chapter 25
     private static final String FETCH_RECENTS_METHOD = "flickr.photos.getRecent";
@@ -111,7 +108,10 @@ public class FlickFetcher {
                     .appendQueryParameter("format", "json")
                     .appendQueryParameter("nojsoncallback", "1")
                     .appendQueryParameter("extras", "url_s")
+                 //   .appendQueryParameter("text", "")
                     .build().toString();
+
+        // String url = "https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=9e314633e0f176cb654d9d6f96b99e00&format=json&nojsoncallback=1&text=dog"
             //get the responce in a string format
             String jsonString = getUrlString(url);
 
@@ -123,6 +123,8 @@ public class FlickFetcher {
             //CHALLENGE USE GSON TO go through the JSON and update our list of GAllery items
             parseItemsGson(galleryItems, jsonObject);
 
+
+            Log.d(TAG, "fetchItems: " + jsonString);
 
         } catch (JSONException je) {
             Log.d(TAG, "Failed to parse JSON", je);

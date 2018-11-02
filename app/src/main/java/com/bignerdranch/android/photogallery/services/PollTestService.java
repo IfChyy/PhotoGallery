@@ -1,8 +1,10 @@
-package com.bignerdranch.android.photogallery;
+package com.bignerdranch.android.photogallery.services;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -18,6 +20,12 @@ import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
+import com.bignerdranch.android.photogallery.utilities.FlickFetcher;
+import com.bignerdranch.android.photogallery.PhotoGalleryActivity;
+import com.bignerdranch.android.photogallery.R;
+import com.bignerdranch.android.photogallery.dataclass.GalleryItem;
+import com.bignerdranch.android.photogallery.utilities.QueryPreferences;
+
 import java.util.List;
 
 /**
@@ -27,12 +35,13 @@ import java.util.List;
 
 @SuppressLint("NewApi")
 public class PollTestService extends JobService {
-    private static final int JOB_ID = 5;
-    private static final long TIME_INTERVAL = 1000 * 5;
+    private static final int JOB_ID = 8123;
+    private static final long TIME_INTERVAL = 1000 * 60*15 ;
     public static final String ACTION_SHOW_NOTIFICATION = "com.bignerdranch.android.photogallery.SHOW_NOTIFICATION";
     public static final String PERMISSION_RPIVATE = "com.bignerdranch.android.photogallery.PRIVATE";
     public static final String REQUEST_CODE = "REQUEST_CODE";
     public static final String NOTIFICATION = "NOTIFICATION";
+    public static final String CHANNEL_ID = "default";
 
     private PollTask pollTask;
 
@@ -48,9 +57,10 @@ public class PollTestService extends JobService {
     public boolean onStopJob(JobParameters params) {
         Log.d("thos", "onStopJob: PollTestService");
 
-        pollTask.cancel(true);
-        Log.d("thos", "polltask canceled");
-
+        if (pollTask != null) {
+            pollTask.cancel(true);
+            Log.d("thos", "polltask canceled");
+        }
         return true;
     }
 
@@ -65,21 +75,26 @@ public class PollTestService extends JobService {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 info = new JobInfo.Builder(JOB_ID,
                         new ComponentName(context, PollTestService.class))
-                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_METERED)
-                        .setMinimumLatency(TIME_INTERVAL)
+                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                        .setPeriodic(TIME_INTERVAL)
                         .setPersisted(true)
                         .build();
             } else {
                 info = new JobInfo.Builder(JOB_ID,
                         new ComponentName(context, PollTestService.class))
-                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_METERED)
+                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                         .setPeriodic(TIME_INTERVAL)
                         .setPersisted(true)
                         .build();
             }
 
+
+            assert scheduler != null;
             scheduler.schedule(info);
+
+
         } else {
+            assert scheduler != null;
             scheduler.cancel(JOB_ID);
         }
 
@@ -130,6 +145,7 @@ public class PollTestService extends JobService {
         protected void onPostExecute(List<GalleryItem> galleryItems) {
             Log.d("thos", "onPostExecute: ");
 
+            createNotificationChannel();
             //gets the last stored pref id
             String lastResultId = QueryPreferences.getPrefLastResultId(getApplicationContext());
             //if no images found return
@@ -167,6 +183,15 @@ public class PollTestService extends JobService {
                         .setAutoCancel(true)
                         .build();
 
+                NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
+                        .setSmallIcon(R.drawable.bill_up_close)
+                        .setContentTitle(resources.getString(R.string.new_pictures_title))
+                        .setContentText(resources.getString(R.string.new_pictures_text))
+                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        .setContentIntent(pi)
+                        .setAutoCancel(true);
+
+
                 //chapter 27, code excluded for use of broadcast receivers
                 //notificaiton will only be shown if app is in background or closed
                 //if in foreground or user can see it no notification would be displayed
@@ -182,7 +207,7 @@ public class PollTestService extends JobService {
                 sendBroadcast(new Intent(ACTION_SHOW_NOTIFICATION), PERMISSION_RPIVATE);*/
 
                 //sends a broadcast intent every time a new search results is available
-                showBackgroundNotification(0, notification);
+                showBackgroundNotification(0, mBuilder.build());
             }
         }
 
@@ -194,10 +219,11 @@ public class PollTestService extends JobService {
             boolean isNetworkAvailable = connectivityManager.getActiveNetworkInfo() != null;
             boolean isNetworkConnected = isNetworkAvailable && connectivityManager.getActiveNetworkInfo().isConnected();
 
+            Log.d("net", "isNetworkAvailableAndConnected: " + isNetworkAvailable + "  " + isNetworkConnected);
             return isNetworkConnected;
         }
 
-        private void showBackgroundNotification(int request_Code, Notification notification){
+        private void showBackgroundNotification(int request_Code, Notification notification) {
             //create a new intent and set its action - eg string show notificaiton to pass
             Intent in = new Intent(ACTION_SHOW_NOTIFICATION);
             //put our extra request code (String value)
@@ -215,14 +241,32 @@ public class PollTestService extends JobService {
 
 
             /*sends our broadcast concurrently to all receivers in PERMISSION_PRIVATE
-            * first one is Visible Fragment, because it is hosting our fragment which
-            * starts this class
-            * if VisibleFragment class receives this broadcast intnet
-            * ti sets the result code to CANCEL
-            * meaning that the application is opened
-            * then the intent goes to NotificationReceiver and checks the result code
-            * to know if it is going to show a notification*/
+             * first one is Visible Fragment, because it is hosting our fragment which
+             * starts this class
+             * if VisibleFragment class receives this broadcast intnet
+             * ti sets the result code to CANCEL
+             * meaning that the application is opened
+             * then the intent goes to NotificationReceiver and checks the result code
+             * to know if it is going to show a notification*/
             sendOrderedBroadcast(in, PERMISSION_RPIVATE, null, null, Activity.RESULT_OK, null, null);
+        }
+
+        //android 8.0 and higher wee needdd to reguister our chanel with our app
+        private void createNotificationChannel() {
+            // Create the NotificationChannel, but only on API 26+ because
+            // the NotificationChannel class is new and not in the support library
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                CharSequence name = "Default Channel";
+                String description = "this is the default channel for photo gallery app" +
+                        "";
+                int importance = NotificationManager.IMPORTANCE_DEFAULT;
+                NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+                channel.setDescription(description);
+                // Register the channel with the system; you can't change the importance
+                // or other notification behaviors after this
+                NotificationManager notificationManager = getSystemService(NotificationManager.class);
+                notificationManager.createNotificationChannel(channel);
+            }
         }
 
     }

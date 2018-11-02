@@ -1,6 +1,5 @@
 package com.bignerdranch.android.photogallery;
 
-import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -14,6 +13,8 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
+
+import com.bignerdranch.android.photogallery.utilities.VisibleFragent;
 
 /**
  * Created by Ivo Georgiev(IfChyy)

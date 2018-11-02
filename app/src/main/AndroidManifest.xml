@@ -32,19 +32,21 @@
         <!--Web view and other views have to much data to save in onSavedInstance
         and retaining wont work
         the ideal way is to tell the actiity to handle its own configuration changes-->
-        <activity android:name=".PhotoPageActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize"/>
+        <activity
+            android:name=".PhotoPageActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize" />
 
         <!--SERVICES TO SHOW NOTIFICATION AND RUN A SERVICE ON THE BACKGROUND-->
-        <service android:name=".PollService" />
+        <service android:name=".services.PollService" />
         <!--THIS SERVICE CAN SUSTAIN APP EXITED OR REBOOT
         -->
         <service
-            android:name=".PollTestService"
+            android:name=".services.PollTestService"
+
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <!-- STANDALONE RECEIVER TO KNOW WHEN THE PHONE HAS FINISHED BOOTING  -->
-        <receiver android:name=".StartupReceiver">
+        <receiver android:name=".receivers.StartupReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
@@ -54,12 +56,12 @@
         eg -999, this means that it will wait for our dynamically registered receiver
         to see if it should post our notificatio nor not -->
         <receiver
-            android:name=".NotificationReceiver"
+            android:name=".receivers.NotificationReceiver"
             android:exported="false">
-            <intent-filter
-                android:priority="-999">
-
-                <action android:name="com.bignerdranch.android.photogallery.SHOW_NOTIFICATION" />
+            <intent-filter>
+                <action
+                    android:name="com.bignerdranch.android.photogallery.SHOW_NOTIFICATION"
+                    android:priority="999" />
             </intent-filter>
         </receiver>
     </application>

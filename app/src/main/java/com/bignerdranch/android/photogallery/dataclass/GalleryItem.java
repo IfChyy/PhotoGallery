@@ -1,4 +1,4 @@
-package com.bignerdranch.android.photogallery;
+package com.bignerdranch.android.photogallery.dataclass;
 
 import android.net.Uri;
 
@@ -6,20 +6,10 @@ import com.google.gson.annotations.SerializedName;
 
 /**
  * Created by Ivo Georgiev(IfChyy)
- * GalleryItem class
- * holds information about each item picture
- * downloaded from flicker
- * eg
- * caption , id and url of picture
+ * GalleryItem class is a dataclass holding information about each picture taken from Flicker
  *
- *
- * AFTER CHALLENGE TO EVERY VARIABLE ADDED SERIALZIABLE NAME
- * used for refering to the json returned from our api so
- * that we could reference the values we need
- *
- * eg. every variable need @SerializedName("name") above its initialisation
- * //this name is the value we search it by and the value it is inserted automaticaly by
- * GSON library using setter methods
+ * Challenge to use GSON LIBRARY
+ * @serializaleName says that this field is going to get that JSON value
  */
 
 public class GalleryItem {

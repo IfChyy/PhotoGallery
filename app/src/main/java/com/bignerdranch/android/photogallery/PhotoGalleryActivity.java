@@ -3,8 +3,8 @@ package com.bignerdranch.android.photogallery;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
+
+import com.bignerdranch.android.photogallery.utilities.SingleFragmentActivity;
 
 /**
  * Created by Ivo Georgiev (IfChyy)

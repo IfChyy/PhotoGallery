@@ -1,9 +1,12 @@
-package com.bignerdranch.android.photogallery;
+package com.bignerdranch.android.photogallery.receivers;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
+
+import com.bignerdranch.android.photogallery.services.PollTestService;
+import com.bignerdranch.android.photogallery.utilities.QueryPreferences;
 
 /**
  * Created by Ivo Georgiev(IfChyy)

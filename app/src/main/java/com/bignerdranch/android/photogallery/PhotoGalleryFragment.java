@@ -1,12 +1,7 @@
 package com.bignerdranch.android.photogallery;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.app.ProgressDialog;
-import android.app.job.JobInfo;
-import android.app.job.JobScheduler;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -17,7 +12,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.RequiresApi;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -29,11 +23,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
-import android.webkit.URLUtil;
 import android.widget.ImageView;
 import android.widget.SearchView;
 import android.widget.Toast;
 
+import com.bignerdranch.android.photogallery.dataclass.GalleryItem;
+import com.bignerdranch.android.photogallery.services.PollService;
+import com.bignerdranch.android.photogallery.services.PollTestService;
+import com.bignerdranch.android.photogallery.utilities.FlickFetcher;
+import com.bignerdranch.android.photogallery.utilities.QueryPreferences;
+import com.bignerdranch.android.photogallery.utilities.ThumbnailDownloader;
+import com.bignerdranch.android.photogallery.utilities.VisibleFragent;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -66,6 +66,7 @@ public class PhotoGalleryFragment extends VisibleFragent {
 
 
     boolean hasBeenScheduled = false;
+
     //used to retain the fragment for a short period of time
     //while rotating the phone for not calling new async tasks
     //every time phone rotates
@@ -104,6 +105,8 @@ public class PhotoGalleryFragment extends VisibleFragent {
         //get the looper
         thumbnailDownloader.getLooper();
         Log.d(TAG, "Background thread started@!");
+
+
     }
 
     @Nullable
@@ -218,7 +221,6 @@ public class PhotoGalleryFragment extends VisibleFragent {
         });
 
 
-
         //CHAPTER 26 USING JOBSERVICE
         MenuItem toggleItem = menu.findItem(R.id.menu_item_toggle_polling);
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
@@ -233,6 +235,7 @@ public class PhotoGalleryFragment extends VisibleFragent {
             } else {
                 toggleItem.setTitle(R.string.start_polling);
             }
+            Log.d(TAG, "onOptionsItemSelected: 2vlwze");
         }
     }
 
@@ -246,15 +249,21 @@ public class PhotoGalleryFragment extends VisibleFragent {
                 return true;
 
             case R.id.menu_item_toggle_polling:
-        /*        //check if alarm is on or off
-                boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
-                //if on stop if off start
-                PollService.setServiceAlarm(getActivity(), shouldStartAlarm);
-*/
 
-               //CHAPTER 26 CHALLENGE JOBSERVICE
-                boolean shouldStartAlarm = !PollTestService.isServiceScheduleOn(getActivity());
-                PollTestService.setServiceSchedule(getActivity(), shouldStartAlarm);
+                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
+                    //check if alarm is on or off
+                    boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
+                    //if on stop if off start
+                    PollService.setServiceAlarm(getActivity(), shouldStartAlarm);
+                    Log.d(TAG, "onOptionsItemSelected: 1 " + shouldStartAlarm);
+                } else {
+
+
+                    //CHAPTER 26 CHALLENGE JOBSERVICE
+                    boolean shouldStartAlarm = !PollTestService.isServiceScheduleOn(getActivity());
+                    PollTestService.setServiceSchedule(getActivity(), shouldStartAlarm);
+                    Log.d(TAG, "onOptionsItemSelected: 2" + shouldStartAlarm);
+                }
 
                 getActivity().invalidateOptionsMenu();
                 return true;
@@ -301,7 +310,7 @@ public class PhotoGalleryFragment extends VisibleFragent {
 
     //----------------------PHOTO HOLDER
     //VIEW HOLDER class to hold the infromation about each gallery item
-    private class PhotoHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+    private class PhotoHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         private ImageView photoView;
         //init the gallery item
         private GalleryItem item;
@@ -451,12 +460,14 @@ public class PhotoGalleryFragment extends VisibleFragent {
             //fetch a string from url with json data
             //return new FlickFetcher().fetchItems(String.valueOf(pageCount));
 
-            //Chapter 25
+  /*          //Chapter 25
             if (query == null) {
                 return new FlickFetcher().fetchRecentPhotos();
             } else {
-                return new FlickFetcher().searchPhotos(query);
-            }
+
+            }*/
+            Log.d(TAG, "doInBackground: " + query);
+            return new FlickFetcher().searchPhotos("dog");
         }
 
         //after images downlaoded setup the adapter

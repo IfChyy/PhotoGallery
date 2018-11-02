@@ -1,20 +1,22 @@
-package com.bignerdranch.android.photogallery;
+package com.bignerdranch.android.photogallery.receivers;
 
 import android.app.Activity;
 import android.app.Notification;
-import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
-import java.lang.reflect.AccessibleObject;
+import com.bignerdranch.android.photogallery.services.PollTestService;
 
 /**
  * Created by Ivo Georgiev (IfChyy)
- * Notificaiton receiver class is going to be our standaalone receiver
- * to run after our dynamicaly registered receiver
+ * Notification receiver class is going to be our standalone receiver
+ * to run after our dynamically registered receiver
+ *
+ * if broadcast with notification in it is registered
+ * this on receive is going to fire
  */
 
 public class NotificationReceiver extends BroadcastReceiver {
@@ -25,7 +27,7 @@ public class NotificationReceiver extends BroadcastReceiver {
         Log.d(TAG, "Received result " + getResultCode());
 
         //HERE WE GET OUR RESULT CODE FROM OUR OrderedBroadcast from PollTestService intent(action)
-        // meaning we send a broadcast intnet with our result code ok
+        // meaning we send a broadcast intent with our result code ok
         //meaning that our app is in background and we can show our notification after polling
         if(getResultCode() != Activity.RESULT_OK){
             //meaning that a foreground activity cancled the broadcast
