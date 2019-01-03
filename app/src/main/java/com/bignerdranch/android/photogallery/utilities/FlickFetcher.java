@@ -39,6 +39,7 @@ public class FlickFetcher {
             .appendQueryParameter("nojsoncallback", "1")
             .appendQueryParameter("extras", "url_s")
             .build();
+    private String url;
 
 
     //list holding each GalleryItem
@@ -99,21 +100,22 @@ public class FlickFetcher {
             //use our api key we specified and got from flicker
             //format the data passed in json
             // no json call back 1 = used for exlcuding enclosed method name nad parnthesses from responce
-            String url = Uri.parse("https://api.flickr.com/services/rest")
+          /*  String url = Uri.parse("https://api.flickr.com/services/rest")
                     .buildUpon()
-                    .appendQueryParameter("method", "flickr.photos.getRecent")
+               //    .appendQueryParameter("method", "flickr.photos.getRecent")
+                   //.appendQueryParameter("method", "flickr.photos.search")
                     .appendQueryParameter("api_key", API_KEY)
                     .appendQueryParameter("page", page)
                     .appendQueryParameter("per_page", "300")
                     .appendQueryParameter("format", "json")
                     .appendQueryParameter("nojsoncallback", "1")
                     .appendQueryParameter("extras", "url_s")
-                 //   .appendQueryParameter("text", "")
-                    .build().toString();
+                    //.appendQueryParameter("text", "")
+                    .build().toString();*/
 
-        // String url = "https://api.flickr.com/services/rest/?method=flickr.photos.search&api_key=9e314633e0f176cb654d9d6f96b99e00&format=json&nojsoncallback=1&text=dog"
+
             //get the responce in a string format
-            String jsonString = getUrlString(url);
+            String jsonString = getUrlString(page);
 
             //format the outptu json string into a big json object
             JSONObject jsonObject = new JSONObject(jsonString);
@@ -162,12 +164,13 @@ public class FlickFetcher {
     //method to dynamically fill the method parameter value for the request
     private String buildUrl(String method, String query){
         Uri.Builder uriBuilder = ENDPOINT.buildUpon()
-                .appendQueryParameter("method", method);
+                .appendQueryParameter("method", "flickr.photos.getRecent");
         //if method is search append the searched value
         if(method.equals(SEARCH_METHOD)){
-            uriBuilder.appendQueryParameter("text", query);
+            uriBuilder.appendQueryParameter("method", method).appendQueryParameter("text", query);
         }
 
+        Log.d(TAG, "buildUrl: " + method);
         return uriBuilder.build().toString();
     }
 
@@ -175,6 +178,7 @@ public class FlickFetcher {
     //fetch the recent photos
     public List<GalleryItem> fetchRecentPhotos(){
         String url = buildUrl(FETCH_RECENTS_METHOD, null);
+        Log.d(TAG, "fetchRecentPhotos: " + url);
         return fetchItems(url);
     }
     //CHAPTER 25
